@@ -7,16 +7,27 @@
 </head>
 <body>
     <h1>Toxicity Detector</h1>
+
+    <!-- Form to submit new text for prediction -->
     <form id="toxicityForm">
         <textarea id="text" name="text" rows="4" cols="50"></textarea><br><br>
         <button type="submit">Analyze</button>
     </form>
+
+    <!-- Div to display the result of the prediction -->
     <div id="result"></div>
+
+    <!-- Section to display saved predictions -->
+    <h2>Saved Predictions</h2>
+    <div id="savedPredictions">
+        <ul></ul>
+    </div>
 
     <script>
         // Select the form and result elements
         const form = document.getElementById('toxicityForm');
         const resultDiv = document.getElementById('result');
+        const savedPredictionsDiv = document.getElementById('savedPredictions').querySelector('ul');
         
         // Handle form submission with JavaScript
         form.addEventListener('submit', async (e) => {
@@ -40,7 +51,9 @@
 
                 // Check if the response is successful and display the result
                 if (response.ok) {
-                    resultDiv.innerHTML = `Text: ${data.text}<br>Labels: ${JSON.stringify(data.labels)}`;
+                    const labelsWithScores = data.labels_with_scores.map(item => 
+                        `<li>${item.label}: ${item.score.toFixed(4)}</li>`).join('');
+                    resultDiv.innerHTML = `<p>Text: ${data.text}</p><ul>${labelsWithScores}</ul>`;
                 } else {
                     resultDiv.innerHTML = `Error: ${data.detail || 'An error occurred'}`;
                 }
@@ -48,6 +61,29 @@
                 resultDiv.innerHTML = `Error: ${error.message}`;
             }
         });
+
+        // Function to fetch and display saved predictions
+        async function fetchSavedPredictions() {
+            try {
+                const response = await fetch('/predictions');
+                const predictions = await response.json();
+                
+                if (predictions.length > 0) {
+                    savedPredictionsDiv.innerHTML = predictions.map(prediction => {
+                        const labels = prediction.labels_with_scores.map(item => 
+                            `<li>${item.label}: ${item.score.toFixed(4)}</li>`).join('');
+                        return `<li><strong>${prediction.text}</strong><ul>${labels}</ul></li>`;
+                    }).join('');
+                } else {
+                    savedPredictionsDiv.innerHTML = '<li>No predictions saved yet.</li>';
+                }
+            } catch (error) {
+                savedPredictionsDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        // Call function to fetch saved predictions on page load
+        fetchSavedPredictions();
     </script>
 </body>
 </html>
