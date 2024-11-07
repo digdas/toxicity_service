@@ -3,5 +3,4 @@ uvicorn
 sqlalchemy
 pydantic
 transformers
-torch
 psycopg2-binary   # For PostgreSQL connection

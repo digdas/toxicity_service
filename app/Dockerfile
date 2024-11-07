@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.9-slim
+FROM pytorch/pytorch:2.5.1-cpu
 
 # Set working directory
 WORKDIR /app
