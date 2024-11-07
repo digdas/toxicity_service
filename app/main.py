@@ -4,11 +4,14 @@ from sqlalchemy.orm import Session
 from app.database import engine, SessionLocal, Base, get_db
 from app.model import load_model, predict_toxicity
 from app.schemas import TextRequest, TextResponse, TextData
+from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
 
 # Initialize the app and database
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
 model = load_model()
+templates = Jinja2Templates(directory="app/web/templates")
 
 @app.post("/predict", response_model=TextResponse)
 async def predict_toxicity_route(request: TextRequest, db: Session = Depends(get_db)):
@@ -21,5 +24,5 @@ async def predict_toxicity_route(request: TextRequest, db: Session = Depends(get
 
 # Serve the web interface
 @app.get("/")
-async def read_index():
+async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
