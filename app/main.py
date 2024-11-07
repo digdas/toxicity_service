@@ -4,11 +4,10 @@ from sqlalchemy.orm import Session
 from app.database import engine, SessionLocal, Base, get_db
 from app.model import load_model, predict_toxicity
 from app.schemas import TextRequest, TextResponse, TextData
-from app import models
 
 # Initialize the app and database
 app = FastAPI()
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 model = load_model()
 
 @app.post("/predict", response_model=TextResponse)

@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from app.database import Base
+from sqlalchemy import Column, Integer, String, JSON
 
 class TextRequest(BaseModel):
     text: str
