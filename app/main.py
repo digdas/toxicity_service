@@ -27,7 +27,7 @@ async def predict_toxicity_route(request: TextRequest, db: Session = Depends(get
     labels_with_scores = predict_toxicity(model, request.text)
     
     # Save the text and prediction to the database
-    db_text = TextData(text=request.text, labels=labels_with_scores)
+    db_text = TextData(text=request.text, labels_with_scores=labels_with_scores)
     db.add(db_text)
     db.commit()
     db.refresh(db_text)
