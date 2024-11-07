@@ -1,14 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toxicity Detector</title>
 </head>
 <body>
     <h1>Toxicity Detector</h1>
-    <form action="/predict" method="post">
-        <textarea name="text" rows="4" cols="50"></textarea>
+    <form id="toxicityForm">
+        <textarea id="text" name="text" rows="4" cols="50"></textarea><br><br>
         <button type="submit">Analyze</button>
     </form>
     <div id="result"></div>
+
+    <script>
+        // Select the form and result elements
+        const form = document.getElementById('toxicityForm');
+        const resultDiv = document.getElementById('result');
+        
+        // Handle form submission with JavaScript
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();  // Prevent form from submitting normally
+
+            // Get the text value from the textarea
+            const text = document.getElementById('text').value;
+
+            // Send the POST request with fetch API
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',  // Set Content-Type to JSON
+                    },
+                    body: JSON.stringify({ text: text }),  // Send text as JSON
+                });
+
+                // Parse the response and display it
+                const data = await response.json();
+
+                // Check if the response is successful and display the result
+                if (response.ok) {
+                    resultDiv.innerHTML = `Text: ${data.text}<br>Labels: ${JSON.stringify(data.labels)}`;
+                } else {
+                    resultDiv.innerHTML = `Error: ${data.detail || 'An error occurred'}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        });
+    </script>
 </body>
 </html>
