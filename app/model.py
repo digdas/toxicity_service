@@ -1,49 +1,67 @@
-from transformers import pipeline
+from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
+import torch
 from app.logger import logger
 
 MAX_LENGTH = 512  # Maximum token length for the model
+MODEL_PATH = "./toxicity_model"
 
+# Load model and tokenizer
 def load_model():
-    return pipeline("text-classification", model="cointegrated/rubert-tiny-toxicity", tokenizer="cointegrated/rubert-tiny-toxicity", return_all_scores=True)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=5)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+    return model, tokenizer
 
-def split_text(text, tokenizer, max_length):
-    tokens = tokenizer(text, return_tensors="pt", truncation=False)["input_ids"][0]
+# Function to split text into chunks of 512 tokens
+def split_text(text, tokenizer, max_length=MAX_LENGTH):
+    # Tokenize the text and get input_ids
+    tokens = tokenizer.encode(text, truncation=False)
+    
+    # Split into chunks of max_length tokens
     chunks = [tokens[i:i + max_length] for i in range(0, len(tokens), max_length)]
+    
+    # Decode the chunks back to text
     return [tokenizer.decode(chunk, skip_special_tokens=True) for chunk in chunks]
 
-def predict_toxicity(model, text):
+# Function to predict toxicity and aggregate results
+def predict_toxicity(model, tokenizer, text):
     # Convert text to lower case for better predictions
     text = text.lower()
-    # Split text into chunks if it's too long
-    tokenizer = model.tokenizer
+
+    # Split text into chunks if it's too long (over 512 tokens)
     if len(tokenizer.encode(text)) > MAX_LENGTH:
-        text_chunks = split_text(text, tokenizer, MAX_LENGTH)
-        logger.info("Text split into chunks due to length.")
+        text_chunks = split_text(text, tokenizer)
     else:
         text_chunks = [text]
 
-    aggregated_scores = {}
+    # Dictionary to store aggregated scores
+    aggregated_scores = {label: 0 for label in ["NORMAL", "INSULT", "THREAT", "OBSCENITY", "PROFANITY"]}
 
+    # Loop through each chunk and make predictions
     for chunk in text_chunks:
-        predictions = model(chunk)
+        # Tokenize the chunk
+        inputs = tokenizer(chunk, padding=True, truncation=True, return_tensors="pt")
+        
+        # Move inputs to the same device as the model
+        inputs = {key: val.to(model.device) for key, val in inputs.items()}
+        
+        # Get predictions (use torch.no_grad() to avoid gradient computation)
+        with torch.no_grad():
+            outputs = model(**inputs)
+        
+        # Apply sigmoid to get probabilities
+        probabilities = torch.sigmoid(outputs.logits).cpu().numpy()[0]
 
-        # Log each chunk and prediction
-        logger.info(f"Chunk: {chunk}")
-        logger.info(f"Predictions: {predictions}")
+        # Aggregate the scores for each label
+        for label, prob in zip(aggregated_scores.keys(), probabilities):
+            aggregated_scores[label] += prob
 
-        # Aggregate scores for each label across all chunks
-        for prediction in predictions[0]:  # Assuming predictions return a list of label-score dictionaries
-            label = prediction['label']
-            score = prediction['score']
-            if label in aggregated_scores:
-                aggregated_scores[label] += score
-            else:
-                aggregated_scores[label] = score
-
-    # Average the scores by dividing by the number of chunks
+    # Average the scores across chunks
     num_chunks = len(text_chunks)
     aggregated_scores = {label: score / num_chunks for label, score in aggregated_scores.items()}
 
-    # Map the aggregated scores to labels and return as a list of dicts
+    # Return aggregated scores as a list of dictionaries
     labels_with_scores = [{"label": label, "score": score} for label, score in aggregated_scores.items()]
+
+    logger.info(f"labels_with_scores: {labels_with_scores}")
+
     return labels_with_scores

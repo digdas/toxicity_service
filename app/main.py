@@ -11,7 +11,7 @@ from typing import List
 # Initialize the app and database
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
-model = load_model()
+model, tokenizer = load_model()
 templates = Jinja2Templates(directory="app/web/templates")
 
 @app.get("/predictions", response_model=List[TextDataResponse])
@@ -24,7 +24,7 @@ async def get_saved_predictions(db: Session = Depends(get_db)):
 
 @app.post("/predict", response_model=TextResponse)
 async def predict_toxicity_route(request: TextRequest, db: Session = Depends(get_db)):
-    labels_with_scores = predict_toxicity(model, request.text)
+    labels_with_scores = predict_toxicity(model, tokenizer, request.text)
     
     # Save the text and prediction to the database
     db_text = TextData(text=request.text, labels_with_scores=labels_with_scores)
