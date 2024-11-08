@@ -4,13 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toxicity Detector</title>
+    <style>
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #34495e;
+            margin-top: 2rem;
+        }
+
+        /* Form styling */
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 2rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Result styling */
+        #result {
+            margin-top: 2rem;
+            padding: 15px;
+            background-color: #e9f7fc;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        #result ul {
+            padding-left: 20px;
+        }
+
+        #savedPredictions ul {
+            padding-left: 20px;
+        }
+
+        #savedPredictions li {
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            textarea {
+                font-size: 0.9rem;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>Toxicity Detector</h1>
 
     <!-- Form to submit new text for prediction -->
     <form id="toxicityForm">
-        <textarea id="text" name="text" rows="4" cols="50"></textarea><br><br>
+        <textarea id="text" name="text" rows="4" placeholder="Enter text to analyze..." required></textarea><br><br>
         <button type="submit">Analyze</button>
     </form>
 
@@ -53,7 +149,7 @@
                 if (response.ok) {
                     const labelsWithScores = data.labels_with_scores.map(item => 
                         `<li>${item.label}: ${item.score.toFixed(4)}</li>`).join('');
-                    resultDiv.innerHTML = `<p>Text: ${data.text}</p><ul>${labelsWithScores}</ul>`;
+                    resultDiv.innerHTML = `<p><strong>Text:</strong> ${data.text}</p><ul>${labelsWithScores}</ul>`;
                 } else {
                     resultDiv.innerHTML = `Error: ${data.detail || 'An error occurred'}`;
                 }
