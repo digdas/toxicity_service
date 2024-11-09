@@ -3,7 +3,7 @@ import torch
 from app.logger import logger
 
 MAX_LENGTH = 512  # Maximum token length for the model
-MODEL_PATH = "./toxicity_model"
+MODEL_PATH = "/app/app/toxicity_model"
 
 # Load model and tokenizer
 def load_model():
