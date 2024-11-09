@@ -60,7 +60,7 @@ def predict_toxicity(model, tokenizer, text):
     aggregated_scores = {label: score / num_chunks for label, score in aggregated_scores.items()}
 
     # Return aggregated scores as a list of dictionaries
-    labels_with_scores = [{"label": label, "score": score} for label, score in aggregated_scores.items()]
+    labels_with_scores = [{"label": label, "score": float(score)} for label, score in aggregated_scores.items()]
 
     logger.info(f"labels_with_scores: {labels_with_scores}")
 
